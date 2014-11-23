@@ -15,17 +15,19 @@
         img.src = "test.jpg"
       } else {
         img.src = "test2.jpg"
+        w = 1300;
+        h = 675;
+        canv.width = w;
+        canv.height = h;
       }
       document.querySelector('#buttons').setAttribute('class', 'hide');
-      ctx.drawImage(img, 0, 0);
-      init();
     });
   }
 
-  // var imgReady = function () {
-  //   ctx.drawImage(img, 0, 0);
-  //   init();
-  // };
+  img.onload = function () {
+    ctx.drawImage(img, 0, 0);
+    init();
+  };
 
   var init = function () {
     imgData = ctx.getImageData(0, 0, w, h);
@@ -41,6 +43,12 @@
         init();
         break;
       case 1:
+        fix.correctAngle({
+          borders: info.borders,
+          corners: info.corners
+        });
+        step++;
+        init();
         break;
       case 2:
         break;
@@ -80,6 +88,7 @@
       }
       info.ink = this.inkedUp;
       info.borders = this.borders;
+      info.corners = this.corners;
       return info;
     },
     generateBorders: function (data) {
@@ -100,13 +109,14 @@
       }
     },
     generateCorners: function (data) {
-      var angleDirection = data.top[0] > data.left[0] ? 'away' : 'towards';
+      var angleDirection = data.top[0] > data.bot[0] ? 'towards' : 'away';
       if (angleDirection === 'away') {
         this.corners.topLeft = data.top;
+        this.corners.botLeft = data.left;
       } else {
         this.corners.topLeft = data.left;
+        this.corners.botLeft = data.bot;
       }
-      console.log(this.corners, this.borders);
     },
     resetBordersAndCorners: function () {
       for (var key in this.borders) {
@@ -148,7 +158,10 @@
     },
     correctAngle: function (data) {
       ctx.beginPath();
-      // ctx.moveTo();
+      ctx.moveTo(data.corners.botLeft[0], data.corners.botLeft[1]);
+      ctx.lineTo(data.corners.topLeft[0], data.corners.topLeft[1]);
+      ctx.closePath();
+      ctx.stroke();
     }
   };
 
