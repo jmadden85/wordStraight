@@ -24,6 +24,29 @@
     });
   }
 
+  canv.addEventListener('mousemove', function (e) {
+    // var pos = findPos(this);
+    // var x = e.pageX - pos.x;
+    // var y = e.pageY - pos.y;
+    // var coord = 'x=' + x + ', y=' + y;
+    // var c = this.getContext('2d');
+    // var p = c.getImageData(x, y, 1, 1).data;
+    // var hex = '#' + ('000000' + rgbToHex(p[0], p[1], p[2])).slice(-6);
+    // $('#color').html(coord + '<br>' + hex + '<br>' + p[0] + ', ' + p[1] + ', ' + p[2]);
+    var pos = [e.layerX, e.layerY];
+    var coordsContainer = document.querySelector('#xy');
+    var colorContainer = document.querySelector('#color');
+    var color = ctx.getImageData(pos[0], pos[1], 1, 1).data;
+    var red = color[0];
+    var green = color[1];
+    var blue = color[2];
+    var alpha = color[3];
+    colorContainer.innerHTML = 'RED:' + red + ', GREEN:' + green + ', BLUE:' + blue + ', OPACITY:' + alpha;
+    coordsContainer.innerHTML = pos[0] + ', ' + pos[1];
+
+  });
+
+
   img.onload = function () {
     ctx.drawImage(img, 0, 0);
     init();
@@ -119,11 +142,11 @@
       }
     },
     resetBordersAndCorners: function () {
-      for (var key in this.borders) {
-        this.borders[key] = null;
+      for (var border in this.borders) {
+        this.borders[border] = null;
       }
-      for (var key in this.corners) {
-        this.corners[key] = null;
+      for (var corner in this.corners) {
+        // this.corners[corner] = null;
       }
     },
     borders: {
@@ -156,12 +179,33 @@
       this.clear();
       ctx.drawImage(trimmedImg, 0, -(data.top[1]));
     },
+    invertCorners: function (data) {
+      var newCorners = data;
+      for (var corner in newCorners) {
+        if (newCorners[corner]) {
+          newCorners[corner][1] = h - newCorners[corner][1];
+        }
+      }
+      console.log(newCorners)
+      return newCorners;
+    },
     correctAngle: function (data) {
+      var corners = data.corners;
+      console.log(centerPoint, endPoint, theta, degrees, data, corners);
+
       ctx.beginPath();
-      ctx.moveTo(data.corners.botLeft[0], data.corners.botLeft[1]);
-      ctx.lineTo(data.corners.topLeft[0], data.corners.topLeft[1]);
+      ctx.moveTo(corners.botLeft[0], corners.botLeft[1]);
+      ctx.lineTo(corners.topLeft[0], corners.topLeft[1]);
       ctx.closePath();
       ctx.stroke();
+      var invertedCorners = this.invertCorners(corners);
+      var centerPoint = [(invertedCorners.topLeft[0] - invertedCorners[botLeft[0]) / 2 + invertedCorners[0];
+      // var centerPoint = [corners.topLeft[0] - corners.botLeft[0], corners.botLeft[1] / 2];
+      // var endPoint = corners.botLeft;
+      var dx = endPoint[0] - centerPoint[0];
+      var dy = endPoint[1] - centerPoint[1];
+      var theta = Math.atan2(dy, dx);
+      var degrees = theta * 180/Math.PI;
     }
   };
 
