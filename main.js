@@ -8,19 +8,34 @@
   var imgData;
   var step = 0;
   var buttons = document.querySelectorAll('button');
+  var waitTime = 0;
 
   for (var i = 0, b = buttons.length; i < b; i++) {
     buttons[i].addEventListener('click', function (e) {
-      if (this.innerHTML === 'ONE') {
-        img.src = "test.jpg"
+      if (this.className === 'imgLoad') {
+        if (this.innerHTML === 'ONE') {
+          img.src = "test.jpg"
+        } else {
+          img.src = "test2.jpg"
+          w = 1300;
+          h = 675;
+          canv.width = w;
+          canv.height = h;
+        }
+        document.querySelector('#buttons').setAttribute('class', 'hide');
       } else {
-        img.src = "test2.jpg"
-        w = 1300;
-        h = 675;
-        canv.width = w;
-        canv.height = h;
+        var degrees = document.getElementById('degrees').value;
+        var radians = Math.PI / 180 * parseInt(degrees, 10);
+        var rotateImg = new Image();
+        console.log(degrees, radians);
+        rotateImg.src = canv.toDataURL();
+        ctx.clearRect(0, 0, w, h);
+        ctx.save();
+        ctx.translate(w / 2, h / 2);
+        ctx.rotate(radians);
+        ctx.drawImage(rotateImg, -rotateImg.width / 2, -rotateImg.height / 2);
+        ctx.restore();
       }
-      document.querySelector('#buttons').setAttribute('class', 'hide');
     });
   }
 
@@ -41,7 +56,8 @@
 
   img.onload = function () {
     ctx.drawImage(img, 0, 0);
-    init();
+    wait(waitTime, init);
+    // init();
   };
 
   var init = function () {
@@ -50,12 +66,19 @@
     cleanUp(info);
   };
 
+  var wait = function(time, cb) {
+    setTimeout(function() {
+      cb();
+    }, time);
+  };
+
   var cleanUp = function (info) {
     switch (step) {
       case 0:
         fix.trimHeight(info.borders);
         step++;
-        init();
+        wait(waitTime, init);
+        // init();
         break;
       case 1:
         fix.correctAngle({
@@ -63,7 +86,8 @@
           corners: info.corners
         });
         step++;
-        init();
+        wait(waitTime, init);
+        // init();
         break;
       case 2:
         break;
@@ -126,9 +150,11 @@
     generateCorners: function (data) {
       var angleDirection = data.top[0] > data.bot[0] ? 'towards' : 'away';
       if (angleDirection === 'away') {
+        this.tiltDirection = 'away';
         this.corners.topLeft = data.top;
         this.corners.botLeft = data.left;
       } else {
+        this.tiltDirection = 'towards';
         this.corners.topLeft = data.left;
         this.corners.botLeft = data.bot;
       }
@@ -153,6 +179,7 @@
       botLeft: null,
       botRight: null
     },
+    tiltDirection: null,
     inkedUp: [],
   };
 
@@ -182,20 +209,34 @@
     },
     correctAngle: function (data) {
       var corners = data.corners;
-      ctx.beginPath();
-      ctx.moveTo(corners.botLeft[0], corners.botLeft[1]);
-      ctx.lineTo(corners.topLeft[0], corners.topLeft[1]);
-      ctx.closePath();
-      ctx.stroke();
-      var invertedCorners = this.invertCorners(corners);
-      console.log(invertedCorners);
-      var centerPoint = (invertedCorners.topLeft[0] - invertedCorners.botLeft[0]) / 2 + invertedCorners[0];
-      // var centerPoint = [corners.topLeft[0] - corners.botLeft[0], corners.botLeft[1] / 2];
-      // var endPoint = corners.botLeft;
-      // var dx = endPoint[0] - centerPoint[0];
-      // var dy = endPoint[1] - centerPoint[1];
-      // var theta = Math.atan2(dy, dx);
-      // var degrees = theta * 180/Math.PI;
+      if (waitTime) {
+        ctx.beginPath();
+        ctx.moveTo(corners.botLeft[0], corners.botLeft[1]);
+        ctx.lineTo(corners.topLeft[0], corners.topLeft[1]);
+        ctx.closePath();
+        ctx.stroke();
+      }
+      var that = this;
+      setTimeout(function () {
+        var invertedCorners = that.invertCorners(corners);
+        var dX = invertedCorners.topLeft[0] - invertedCorners.botLeft[0];
+        var dY = invertedCorners.topLeft[1] - invertedCorners.botLeft[1];
+        var theta = Math.atan2(dY, dX);
+        var degrees = theta * 180/Math.PI;
+        var rotation = (degrees - 90) * Math.PI / 180;
+        var rotateImg = new Image();
+        console.log(degrees, rotation);
+        rotateImg.src = canv.toDataURL();
+        ctx.clearRect(0, 0, w, h);
+        ctx.save();
+        ctx.translate(w / 2, h / 2);
+        ctx.rotate(rotation);
+        ctx.drawImage(rotateImg, -rotateImg.width / 2, -rotateImg.height / 2);
+        ctx.restore();
+        console.log(rotateImg.width, rotateImg.height)
+      }, waitTime);
+      // canv.width = rotateImg.width;
+      // canv.height = rotateImg.height;
     }
   };
 
