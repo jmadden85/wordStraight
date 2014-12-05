@@ -8,7 +8,7 @@
   var imgData;
   var step = 0;
   var buttons = document.querySelectorAll('button');
-  var waitTime = 0;
+  var waitTime = 1000;
 
   for (var i = 0, b = buttons.length; i < b; i++) {
     buttons[i].addEventListener('click', function (e) {
@@ -153,9 +153,13 @@
         this.tiltDirection = 'away';
         this.corners.topLeft = data.top;
         this.corners.botLeft = data.left;
+        this.corners.botRight = data.bot;
+        this.corners.topRight = data.right;
       } else {
         this.tiltDirection = 'towards';
+        this.corners.topRight = data.top;
         this.corners.topLeft = data.left;
+        this.corners.botRight = data.right;
         this.corners.botLeft = data.bot;
       }
     },
@@ -213,9 +217,14 @@
     correctAngle: function (data) {
       var corners = data.corners;
       if (waitTime) {
+        // ctx.beginPath();
+        // ctx.moveTo(corners.botLeft[0], corners.botLeft[1]);
+        // ctx.lineTo(corners.topLeft[0], corners.topLeft[1]);
+        // ctx.closePath();
+        // ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(corners.botLeft[0], corners.botLeft[1]);
-        ctx.lineTo(corners.topLeft[0], corners.topLeft[1]);
+        ctx.moveTo(corners.botRight[0], corners.botRight[1]);
+        ctx.lineTo(corners.topRight[0], corners.topRight[1]);
         ctx.closePath();
         ctx.stroke();
       }
