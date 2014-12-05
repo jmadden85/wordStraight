@@ -198,6 +198,7 @@
       this.clear();
       ctx.drawImage(trimmedImg, 0, -(data.top[1]));
     },
+    //Fix the y coordinate so it starts at 0 instead of ending at it
     invertCorners: function (data) {
       var newCorners = data;
       for (var corner in newCorners) {
@@ -207,6 +208,8 @@
       }
       return newCorners;
     },
+    //figure out the angle of the line from top left corner to bottom left corner and fix it so it's parallel
+    //to the left
     correctAngle: function (data) {
       var corners = data.corners;
       if (waitTime) {
@@ -218,22 +221,26 @@
       }
       var that = this;
       setTimeout(function () {
+        //invert corners so the Y coordinate starts at 0 instead of ending at it
         var invertedCorners = that.invertCorners(corners);
+        //Get the difference between the top left coords and bottom left coords
         var dX = invertedCorners.topLeft[0] - invertedCorners.botLeft[0];
         var dY = invertedCorners.topLeft[1] - invertedCorners.botLeft[1];
+        //Get the angle of the line in radians
         var theta = Math.atan2(dY, dX);
+        //Convert to degrees
         var degrees = theta * 180/Math.PI;
+        //Get the difference of the current angle from 90 degrees
         var rotation = (degrees - 90) * Math.PI / 180;
         var rotateImg = new Image();
-        console.log(degrees, rotation);
         rotateImg.src = canv.toDataURL();
         ctx.clearRect(0, 0, w, h);
         ctx.save();
         ctx.translate(w / 2, h / 2);
+        //Rotate the image the difference to get it to 90 degrees
         ctx.rotate(rotation);
         ctx.drawImage(rotateImg, -rotateImg.width / 2, -rotateImg.height / 2);
         ctx.restore();
-        console.log(rotateImg.width, rotateImg.height)
       }, waitTime);
       // canv.width = rotateImg.width;
       // canv.height = rotateImg.height;
