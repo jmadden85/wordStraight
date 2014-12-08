@@ -4,8 +4,11 @@ html, body {
   border:0;
 }
 canvas {
-  border:1px solid #000;
-  /*margin:20px 0;*/
+  /*border:10px solid #000;*/
+  /*margin:0 0 0 5px;*/
+}
+.canvWrapper {
+  /*border:5px solid red;*/
 }
 .hide {
   display:none;

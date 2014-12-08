@@ -8,17 +8,23 @@
   var imgData;
   var step = 0;
   var buttons = document.querySelectorAll('button');
-  var waitTime = 1000;
+  var waitTime = 100;
 
   for (var i = 0, b = buttons.length; i < b; i++) {
     buttons[i].addEventListener('click', function (e) {
       if (this.className === 'imgLoad') {
         if (this.innerHTML === 'ONE') {
           img.src = "test.jpg"
-        } else {
+        } else if (this.innerHTML === 'TWO') {
           img.src = "test2.jpg"
           w = 1300;
           h = 675;
+          canv.width = w;
+          canv.height = h;
+        } else {
+          img.src = "squareTest2.jpg"
+          w = 8;
+          h = 8;
           canv.width = w;
           canv.height = h;
         }
@@ -27,7 +33,6 @@
         var degrees = document.getElementById('degrees').value;
         var radians = Math.PI / 180 * parseInt(degrees, 10);
         var rotateImg = new Image();
-        console.log(degrees, radians);
         rotateImg.src = canv.toDataURL();
         ctx.clearRect(0, 0, w, h);
         ctx.save();
@@ -63,6 +68,7 @@
   var init = function () {
     imgData = ctx.getImageData(0, 0, w, h);
     var info = imgInfo.giantLoop(imgData.data);
+    console.log(imgData);
     cleanUp(info);
   };
 
@@ -75,16 +81,16 @@
   var cleanUp = function (info) {
     switch (step) {
       case 0:
-        fix.trimHeight(info.borders);
+        // fix.trimHeight(info.borders);
         step++;
         wait(waitTime, init);
         // init();
         break;
       case 1:
-        fix.correctAngle({
-          borders: info.borders,
-          corners: info.corners
-        });
+        // fix.correctAngle({
+        //   borders: info.borders,
+        //   corners: info.corners
+        // });
         step++;
         wait(waitTime, init);
         // init();
@@ -101,25 +107,26 @@
       var red, green, blue;
       var rgbaCount = w * 4;
       var y = 0;
-      var x = -1;
+      var x = 0;
       var info = {};
       this.inkedUp = [];
       this.resetBordersAndCorners();
-      for (var i = 0, n = data.length; i < n; i += 4) {
+      for (var i = 0, n = data.length; i <= n; i += 4) {
         red = data[i];
         green = data[i + 1];
         blue = data[i + 2];
-        //Increment X
-        x++;
-        //Check if we reached the end of a row
-        if (!(i % rgbaCount)) {
-          y++;
-          x = -1;
-        }
         //Check for ink on this pixel
+        console.log(x, y, i, [red, green, blue]);
         if (red < 130 && green < 130 && blue < 130) {
           this.generateBorders([x, y]);
           this.inkedUp.push([x, y]);
+        }
+        //Increment x
+        x++;
+        //Check if we reached the end of a row
+        if (!(i % rgbaCount) && i && i !== w * 4 || !y && !((i + 4) % rgbaCount)) {
+          y++;
+          x = 0;
         }
       }
       if (step === 1) {
@@ -134,7 +141,7 @@
       var borders = this.borders;
       var x = data[0];
       var y = data[1];
-      if (borders.top === null || y < borders.top[1]) {
+      if (borders.top === null || y < borders.top[1] && x < borders.top[0]) {
         borders.top = [x ,y];
       }
       if (borders.right === null || x > borders.right[0]) {
@@ -226,6 +233,7 @@
         ctx.moveTo(corners.botRight[0], corners.botRight[1]);
         ctx.lineTo(corners.topRight[0], corners.topRight[1]);
         ctx.closePath();
+        ctx.strokeStyle = "red";
         ctx.stroke();
       }
       var that = this;
@@ -238,21 +246,21 @@
         //Get the angle of the line in radians
         var theta = Math.atan2(dY, dX);
         //Convert to degrees
-        var degrees = theta * 180/Math.PI;
+        var degrees = theta * 180 / Math.PI;
         //Get the difference of the current angle from 90 degrees
         var rotation = (degrees - 90) * Math.PI / 180;
         var rotateImg = new Image();
         rotateImg.src = canv.toDataURL();
+        h = h * 2;
+        canv.height = h;
         ctx.clearRect(0, 0, w, h);
         ctx.save();
         ctx.translate(w / 2, h / 2);
         //Rotate the image the difference to get it to 90 degrees
         ctx.rotate(rotation);
-        ctx.drawImage(rotateImg, -rotateImg.width / 2, -rotateImg.height / 2);
+        ctx.drawImage(rotateImg, -rotateImg.width / 2, - rotateImg.height / 4);
         ctx.restore();
       }, waitTime);
-      // canv.width = rotateImg.width;
-      // canv.height = rotateImg.height;
     }
   };
 
