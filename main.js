@@ -8,7 +8,7 @@
   var imgData;
   var step = 0;
   var buttons = document.querySelectorAll('button');
-  var waitTime = 100;
+  var waitTime = 6000;
 
   for (var i = 0, b = buttons.length; i < b; i++) {
     buttons[i].addEventListener('click', function (e) {
@@ -22,9 +22,9 @@
           canv.width = w;
           canv.height = h;
         } else {
-          img.src = "squareTest2.jpg"
-          w = 8;
-          h = 8;
+          img.src = "squareTest.jpg"
+          w = 50;
+          h = 50;
           canv.width = w;
           canv.height = h;
         }
@@ -68,7 +68,7 @@
   var init = function () {
     imgData = ctx.getImageData(0, 0, w, h);
     var info = imgInfo.giantLoop(imgData.data);
-    console.log(imgData);
+    console.log(info);
     cleanUp(info);
   };
 
@@ -81,16 +81,16 @@
   var cleanUp = function (info) {
     switch (step) {
       case 0:
-        // fix.trimHeight(info.borders);
+        fix.trimHeight(info.borders);
         step++;
         wait(waitTime, init);
         // init();
         break;
       case 1:
-        // fix.correctAngle({
-        //   borders: info.borders,
-        //   corners: info.corners
-        // });
+        fix.correctAngle({
+          borders: info.borders,
+          corners: info.corners
+        });
         step++;
         wait(waitTime, init);
         // init();
@@ -111,23 +111,24 @@
       var info = {};
       this.inkedUp = [];
       this.resetBordersAndCorners();
-      for (var i = 0, n = data.length; i <= n; i += 4) {
+      for (var i = 0, n = data.length; i < n; i += 4) {
         red = data[i];
         green = data[i + 1];
         blue = data[i + 2];
+        x = (i / 4) % w;
+        y = Math.floor((i / 4) / w);
         //Check for ink on this pixel
-        console.log(x, y, i, [red, green, blue]);
         if (red < 130 && green < 130 && blue < 130) {
           this.generateBorders([x, y]);
           this.inkedUp.push([x, y]);
         }
         //Increment x
-        x++;
+        // x++;
         //Check if we reached the end of a row
-        if (!(i % rgbaCount) && i && i !== w * 4 || !y && !((i + 4) % rgbaCount)) {
-          y++;
-          x = 0;
-        }
+        // if (!(i % rgbaCount) && i && i !== w * 4 || !y && !((i + 4) % rgbaCount)) {
+        //   y++;
+        //   x = 0;
+        // }
       }
       if (step === 1) {
         this.generateCorners(this.borders);
@@ -135,13 +136,14 @@
       info.ink = this.inkedUp;
       info.borders = this.borders;
       info.corners = this.corners;
+      window.ink = info.ink;
       return info;
     },
     generateBorders: function (data) {
       var borders = this.borders;
       var x = data[0];
       var y = data[1];
-      if (borders.top === null || y < borders.top[1] && x < borders.top[0]) {
+      if (borders.top === null || y < borders.top[1]) {
         borders.top = [x ,y];
       }
       if (borders.right === null || x > borders.right[0]) {
@@ -156,15 +158,30 @@
     },
     generateCorners: function (data) {
       var angleDirection = data.top[0] > data.bot[0] ? 'towards' : 'away';
+      var that = this;
+      var findEdge = function (options) {
+        // var direction = options.direction;
+        var coords = options.coords;
+        var getLine = function (el, index, array) {
+          return el[1] === coords[1];
+        };
+        var line = that.inkedUp.filter(getLine);
+        return line;
+      };
+      var lines = {
+        top: findEdge({coords: data.top}),
+        bot: findEdge({coords: data.bot})
+      };
+      console.log(lines);
       if (angleDirection === 'away') {
         this.tiltDirection = 'away';
         this.corners.topLeft = data.top;
         this.corners.botLeft = data.left;
-        this.corners.botRight = data.bot;
+        this.corners.botRight = lines.bot[lines.bot.length - 1];
         this.corners.topRight = data.right;
       } else {
         this.tiltDirection = 'towards';
-        this.corners.topRight = data.top;
+        this.corners.topRight = lines.top[lines.top.length - 1];
         this.corners.topLeft = data.left;
         this.corners.botRight = data.right;
         this.corners.botLeft = data.bot;
