@@ -8,7 +8,7 @@
   var imgData;
   var step = 0;
   var buttons = document.querySelectorAll('button');
-  var waitTime = 6000;
+  var waitTime = 100;
 
   for (var i = 0, b = buttons.length; i < b; i++) {
     buttons[i].addEventListener('click', function (e) {
@@ -68,7 +68,6 @@
   var init = function () {
     imgData = ctx.getImageData(0, 0, w, h);
     var info = imgInfo.giantLoop(imgData.data);
-    console.log(info);
     cleanUp(info);
   };
 
@@ -122,21 +121,14 @@
           this.generateBorders([x, y]);
           this.inkedUp.push([x, y]);
         }
-        //Increment x
-        // x++;
-        //Check if we reached the end of a row
-        // if (!(i % rgbaCount) && i && i !== w * 4 || !y && !((i + 4) % rgbaCount)) {
-        //   y++;
-        //   x = 0;
-        // }
       }
+      //If the height has already been trimmed and borders generated get the corners
       if (step === 1) {
         this.generateCorners(this.borders);
       }
       info.ink = this.inkedUp;
       info.borders = this.borders;
       info.corners = this.corners;
-      window.ink = info.ink;
       return info;
     },
     generateBorders: function (data) {
@@ -156,6 +148,12 @@
         borders.left = [x ,y];
       }
     },
+    checkArea: function (options) {
+      var area = options.area;
+      var direction = options.direction || 'center';
+      var size = 100;
+      console.log(this.inkedUp, options);
+    },
     generateCorners: function (data) {
       var angleDirection = data.top[0] > data.bot[0] ? 'towards' : 'away';
       var that = this;
@@ -168,11 +166,13 @@
         var line = that.inkedUp.filter(getLine);
         return line;
       };
+      this.checkArea({
+        area: [10, 10]
+      });
       var lines = {
         top: findEdge({coords: data.top}),
         bot: findEdge({coords: data.bot})
       };
-      console.log(lines);
       if (angleDirection === 'away') {
         this.tiltDirection = 'away';
         this.corners.topLeft = data.top;
