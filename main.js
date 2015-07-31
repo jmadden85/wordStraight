@@ -1,5 +1,5 @@
 'use strict';
-(function() {
+(function () {
   var canv = document.querySelector('canvas');
   var w = canv.width;
   var h = canv.height;
@@ -9,20 +9,35 @@
   var step = 0;
   var buttons = document.querySelectorAll('button');
   var waitTime = 6000;
+  var i;
+  var l;
+  var init;
+  var wait;
+  var cleanUp;
+  var imgInfo;
+  var findText;
+  var fix;
 
-  for (var i = 0, b = buttons.length; i < b; i++) {
-    buttons[i].addEventListener('click', function (e) {
+  // Loop through buttons
+  for (i = 0, l = buttons.length; i < l; i++) {
+
+    // Button events
+    buttons[i].addEventListener('click', function buttonListener () {
+      var degrees;
+      var radians;
+      var rotateImg;
+
       if (this.className === 'imgLoad') {
         if (this.innerHTML === 'ONE') {
-          img.src = "test.jpg"
+          img.src = 'test.jpg';
         } else if (this.innerHTML === 'TWO') {
-          img.src = "test2.jpg"
+          img.src = 'test2.jpg';
           w = 1300;
           h = 675;
           canv.width = w;
           canv.height = h;
         } else {
-          img.src = "squareTest.jpg"
+          img.src = 'squareTest.jpg';
           w = 50;
           h = 50;
           canv.width = w;
@@ -30,9 +45,9 @@
         }
         document.querySelector('#buttons').setAttribute('class', 'hide');
       } else {
-        var degrees = document.getElementById('degrees').value;
-        var radians = Math.PI / 180 * parseInt(degrees, 10);
-        var rotateImg = new Image();
+        degrees = document.getElementById('degrees').value;
+        radians = Math.PI / 180 * parseInt(degrees, 10);
+        rotateImg = new Image();
         rotateImg.src = canv.toDataURL();
         ctx.clearRect(0, 0, w, h);
         ctx.save();
@@ -44,7 +59,7 @@
     });
   }
 
-  canv.addEventListener('mousemove', function (e) {
+  canv.addEventListener('mousemove', function mouseMove (e) {
     var pos = [e.pageX - this.offsetLeft, e.pageY - this.offsetTop];
     var coordsContainer = document.querySelector('#xy');
     var colorContainer = document.querySelector('#color');
@@ -53,37 +68,41 @@
     var green = color[1];
     var blue = color[2];
     var alpha = color[3];
+
     colorContainer.innerHTML = 'RED:' + red + ', GREEN:' + green + ', BLUE:' + blue + ', OPACITY:' + alpha;
     coordsContainer.innerHTML = pos[0] + ', ' + pos[1];
 
   });
 
 
-  img.onload = function () {
+  img.onload = function imgLoaded () {
     ctx.drawImage(img, 0, 0);
     wait(waitTime, init);
+
     // init();
   };
 
-  var init = function () {
-    imgData = ctx.getImageData(0, 0, w, h);
+  init = function () {
     var info = imgInfo.giantLoop(imgData.data);
+
+    imgData = ctx.getImageData(0, 0, w, h);
     console.log(info);
     cleanUp(info);
   };
 
-  var wait = function(time, cb) {
-    setTimeout(function() {
+  wait = function (time, cb) {
+    setTimeout(function stepThrough() {
       cb();
     }, time);
   };
 
-  var cleanUp = function (info) {
+  cleanUp = function (info) {
     switch (step) {
       case 0:
         fix.trimHeight(info.borders);
         step++;
         wait(waitTime, init);
+
         // init();
         break;
       case 1:
@@ -93,6 +112,7 @@
         });
         step++;
         wait(waitTime, init);
+
         // init();
         break;
       case 2:
@@ -102,29 +122,34 @@
     }
   };
 
-  var imgInfo = {
+  imgInfo = {
     giantLoop: function (data) {
-      var red, green, blue;
+      var red;
+      var green;
+      var blue;
       var rgbaCount = w * 4;
       var y = 0;
       var x = 0;
       var info = {};
+
       this.inkedUp = [];
       this.resetBordersAndCorners();
-      for (var i = 0, n = data.length; i < n; i += 4) {
+      for (i = 0, l = data.length; i < l; i += 4) {
         red = data[i];
         green = data[i + 1];
         blue = data[i + 2];
         x = (i / 4) % w;
         y = Math.floor((i / 4) / w);
-        //Check for ink on this pixel
+
+        // Check for ink on this pixel
         if (red < 130 && green < 130 && blue < 130) {
           this.generateBorders([x, y]);
           this.inkedUp.push([x, y]);
         }
-        //Increment x
+
+        // Increment x
         // x++;
-        //Check if we reached the end of a row
+        // Check if we reached the end of a row
         // if (!(i % rgbaCount) && i && i !== w * 4 || !y && !((i + 4) % rgbaCount)) {
         //   y++;
         //   x = 0;
@@ -143,17 +168,18 @@
       var borders = this.borders;
       var x = data[0];
       var y = data[1];
+
       if (borders.top === null || y < borders.top[1]) {
-        borders.top = [x ,y];
+        borders.top = [x, y];
       }
       if (borders.right === null || x > borders.right[0]) {
-        borders.right = [x ,y];
+        borders.right = [x, y];
       }
       if (borders.bot === null || y > borders.bot[1]) {
-        borders.bot = [x ,y];
+        borders.bot = [x, y];
       }
       if (borders.left === null || x < borders.left[0]) {
-        borders.left = [x ,y];
+        borders.left = [x, y];
       }
     },
     generateCorners: function (data) {
@@ -162,16 +188,18 @@
       var findEdge = function (options) {
         // var direction = options.direction;
         var coords = options.coords;
-        var getLine = function (el, index, array) {
+        var getLine = function (el) {
           return el[1] === coords[1];
         };
         var line = that.inkedUp.filter(getLine);
+
         return line;
       };
       var lines = {
         top: findEdge({coords: data.top}),
         bot: findEdge({coords: data.bot})
       };
+
       console.log(lines);
       if (angleDirection === 'away') {
         this.tiltDirection = 'away';
@@ -188,30 +216,35 @@
       }
     },
     resetBordersAndCorners: function () {
-      for (var border in this.borders) {
-        this.borders[border] = null;
+      var border;
+      var corner;
+
+      for (border in this.borders) {
+        if ({}.hasOwnProperty.call(this.borders, border)) {
+          this.borders[border] = null;
+        }
       }
-      for (var corner in this.corners) {
+      for (corner in this.corners) {
         // this.corners[corner] = null;
       }
     },
     borders: {
-      top: null,
+      top  : null,
       right: null,
-      bot: null,
-      left: null
+      bot  : null,
+      left : null
     },
     corners: {
-      topLeft: null,
+      topLeft : null,
       topRight: null,
-      botLeft: null,
+      botLeft : null,
       botRight: null
     },
     tiltDirection: null,
-    inkedUp: [],
+    inkedUp      : []
   };
 
-  var fix = {
+  fix = {
     clear: function () {
       ctx.clearRect(0, 0, w, h);
       w = canv.width;
@@ -221,25 +254,32 @@
       // ctx.rect(0, data.top, w, data.bot - data.top);
       // ctx.stroke();
       var trimmedImg = new Image();
+
       trimmedImg.src = canv.toDataURL();
       canv.height = data.bot[1] - data.top[1];
       this.clear();
       ctx.drawImage(trimmedImg, 0, -(data.top[1]));
     },
-    //Fix the y coordinate so it starts at 0 instead of ending at it
+
+    // Fix the y coordinate so it starts at 0 instead of ending at it
     invertCorners: function (data) {
       var newCorners = data;
-      for (var corner in newCorners) {
+      var corner;
+
+      for (corner in newCorners) {
         if (newCorners[corner]) {
           newCorners[corner][1] = h - newCorners[corner][1];
         }
       }
       return newCorners;
     },
-    //figure out the angle of the line from top left corner to bottom left corner and fix it so it's parallel
-    //to the left
+
+    // figure out the angle of the line from top left corner to bottom left corner and fix it so it's parallel
+    // to the left
     correctAngle: function (data) {
       var corners = data.corners;
+      var that = this;
+
       if (waitTime) {
         // ctx.beginPath();
         // ctx.moveTo(corners.botLeft[0], corners.botLeft[1]);
@@ -250,39 +290,46 @@
         ctx.moveTo(corners.botRight[0], corners.botRight[1]);
         ctx.lineTo(corners.topRight[0], corners.topRight[1]);
         ctx.closePath();
-        ctx.strokeStyle = "red";
+        ctx.strokeStyle = 'red';
         ctx.stroke();
       }
-      var that = this;
+
       setTimeout(function () {
-        //invert corners so the Y coordinate starts at 0 instead of ending at it
+
+        // invert corners so the Y coordinate starts at 0 instead of ending at it
         var invertedCorners = that.invertCorners(corners);
-        //Get the difference between the top left coords and bottom left coords
+
+        // Get the difference between the top left coords and bottom left coords
         var dX = invertedCorners.topLeft[0] - invertedCorners.botLeft[0];
         var dY = invertedCorners.topLeft[1] - invertedCorners.botLeft[1];
-        //Get the angle of the line in radians
+
+        // Get the angle of the line in radians
         var theta = Math.atan2(dY, dX);
-        //Convert to degrees
+
+        // Convert to degrees
         var degrees = theta * 180 / Math.PI;
-        //Get the difference of the current angle from 90 degrees
+
+        // Get the difference of the current angle from 90 degrees
         var rotation = (degrees - 90) * Math.PI / 180;
         var rotateImg = new Image();
+
         rotateImg.src = canv.toDataURL();
         h = h * 2;
         canv.height = h;
         ctx.clearRect(0, 0, w, h);
         ctx.save();
         ctx.translate(w / 2, h / 2);
-        //Rotate the image the difference to get it to 90 degrees
+
+        // Rotate the image the difference to get it to 90 degrees
         ctx.rotate(rotation);
-        ctx.drawImage(rotateImg, -rotateImg.width / 2, - rotateImg.height / 4);
+        ctx.drawImage(rotateImg, -rotateImg.width / 2, -rotateImg.height / 4);
         ctx.restore();
       }, waitTime);
     }
   };
 
-  var findText = function (data) {
-
+  findText = function (data) {
+    console.log(data);
   };
 
 }());
